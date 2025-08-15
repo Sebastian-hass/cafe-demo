@@ -936,16 +936,50 @@ EMAIL_CONFIG = {
 # Función para enviar email
 def send_email(subject: str, body: str, recipient_email: str = None):
     try:
-        # Para la demo, simplemente devolvemos True sin enviar email real
-        # En producción aquí irían las credenciales SMTP reales
-        print(f"📧 EMAIL SIMULADO:")
+        # Obtener configuración SMTP desde variables de entorno
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+        smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        
+        # Si no hay credenciales configuradas, enviar email simulado
+        if not smtp_user or not smtp_password:
+            print(f"📧 EMAIL SIMULADO (configurar SMTP_USER y SMTP_PASSWORD):")
+            print(f"Para: {recipient_email or EMAIL_CONFIG['recipient_email']}")
+            print(f"Asunto: {subject}")
+            print(f"Cuerpo: {body[:200]}..." if len(body) > 200 else f"Cuerpo: {body}")
+            print("─" * 50)
+            return True
+        
+        # Configurar email real
+        msg = MIMEMultipart()
+        msg['From'] = smtp_user
+        msg['To'] = recipient_email or EMAIL_CONFIG['recipient_email']
+        msg['Subject'] = subject
+        
+        # Adjuntar el cuerpo del mensaje
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        # Conectar al servidor SMTP y enviar
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  # Habilitar seguridad
+        server.login(smtp_user, smtp_password)
+        
+        text = msg.as_string()
+        server.sendmail(smtp_user, recipient_email or EMAIL_CONFIG['recipient_email'], text)
+        server.quit()
+        
+        print(f"✅ Email enviado exitosamente a {recipient_email or EMAIL_CONFIG['recipient_email']}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error enviando email: {e}")
+        # En caso de error, al menos mostrar que se intentó enviar
+        print(f"📧 EMAIL FALLBACK (error en SMTP):")
         print(f"Para: {recipient_email or EMAIL_CONFIG['recipient_email']}")
         print(f"Asunto: {subject}")
-        print(f"Cuerpo: {body}")
+        print(f"Error: {str(e)}")
         print("─" * 50)
-        return True
-    except Exception as e:
-        print(f"Error enviando email: {e}")
         return False
 
 # Inicializar tablas de contacto y newsletter
@@ -2335,11 +2369,28 @@ async def get_chatbot_status():
     Endpoint para verificar el estado de configuración del chatbot.
     Útil para debugging y verificar que todo está configurado correctamente.
     """
+    import os
+    
+    # Obtener información detallada
+    openai_key = os.getenv('OPENAI_API_KEY')
     config_status = chatbot.validate_config()
+    
+    debug_info = {
+        "openai_key_present": bool(openai_key),
+        "openai_key_length": len(openai_key) if openai_key else 0,
+        "openai_key_prefix": openai_key[:10] + "..." if openai_key else None,
+        "environment_vars": {
+            "OPENAI_API_KEY": "✅ Configurada" if openai_key else "❌ No configurada",
+            "APP_NAME": os.getenv('APP_NAME', 'Default'),
+            "PHONE_CONTACT": os.getenv('PHONE_CONTACT', 'Default'),
+            "ADDRESS": os.getenv('ADDRESS', 'Default')
+        }
+    }
     
     return {
         "chatbot_active": True,
         "configuration": config_status,
+        "debug_info": debug_info,
         "message": "Chatbot configurado correctamente" if all(config_status.values()) else "Configuración incompleta"
     }
 

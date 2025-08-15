@@ -119,14 +119,23 @@ def generate_openai_response(user_message: str) -> str:
     """
     
     try:
+        # Debug: Imprimir información de la API key
+        print(f"🔍 Debug - API Key presente: {'✅' if OPENAI_API_KEY else '❌'}")
+        if OPENAI_API_KEY:
+            print(f"🔍 Debug - API Key length: {len(OPENAI_API_KEY)}")
+            print(f"🔍 Debug - API Key prefix: {OPENAI_API_KEY[:10]}...")
+        
         # Intentar importar OpenAI
         try:
             from openai import OpenAI
-        except ImportError:
+            print("✅ OpenAI library imported successfully")
+        except ImportError as e:
+            print(f"❌ Failed to import OpenAI: {e}")
             return "❌ Lo siento, el servicio de chat inteligente no está disponible. Por favor contacta al " + PHONE_CONTACT
         
         if not OPENAI_API_KEY:
-            return "⚙️ Configuración pendiente. Por favor contacta al " + PHONE_CONTACT
+            print("❌ No API key configured")
+            return "❌ Lo siento, el servicio de chat inteligente no está disponible. Por favor contacta al " + PHONE_CONTACT
             
         # Configuración especial para Windows/Antivirus
         try:
