@@ -274,6 +274,8 @@ class ReservationResponse(BaseModel):
 # Inicializar base de datos
 def init_db():
     conn = sqlite3.connect('cafe.db')
+    # Activar modo WAL para mejorar concurrencia
+    conn.execute('PRAGMA journal_mode=WAL;')
     cursor = conn.cursor()
     
     # Tabla productos
