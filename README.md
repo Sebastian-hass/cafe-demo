@@ -1,4 +1,6 @@
-# ☕ Café Demo
+# Café Demo ☕
+
+> Frontend desplegado en Vercel, Backend en Render
 
 Una aplicación web moderna para un café que utiliza React + TypeScript en el frontend y FastAPI + SQLite en el backend.
 
