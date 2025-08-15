@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Café Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .success { color: #16a34a; background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .error { color: #dc2626; background: #fef2f2; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .loading { color: #2563eb; background: #eff6ff; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        button { background: #8b4513; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #6b3410; }
+        pre { background: #f8fafc; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .test-links a { display: inline-block; margin: 5px 10px; color: #2563eb; text-decoration: none; }
+        .test-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Conectividad - Café Demo</h1>
+        <p>Esta página prueba si la conexión entre frontend y backend funciona correctamente.</p>
+        
+        <div id="status" class="loading">🔄 Iniciando pruebas...</div>
+        <div id="results"></div>
+        
+        <h2>🔗 Enlaces de Prueba</h2>
+        <div class="test-links">
+            <a href="http://localhost:5173" target="_blank">Frontend (React)</a>
+            <a href="http://localhost:5173/debug" target="_blank">Debug Page</a>
+            <a href="http://localhost:8000" target="_blank">Backend API</a>
+            <a href="http://localhost:8000/docs" target="_blank">API Docs</a>
+            <a href="http://localhost:8000/health" target="_blank">Health Check</a>
+            <a href="http://localhost:8000/specials" target="_blank">Especiales JSON</a>
+        </div>
+        
+        <h2>🎯 Acciones</h2>
+        <button onclick="testConnectivity()">🔄 Probar Conectividad</button>
+        <button onclick="testFrontend()">🌐 Probar Frontend</button>
+        <button onclick="clearResults()">🗑️ Limpiar</button>
+        
+        <div id="detailed-results"></div>
+    </div>
+
+    <script>
+        let testResults = [];
+
+        async function testConnectivity() {
+            const status = document.getElementById('status');
+            const results = document.getElementById('detailed-results');
+            
+            status.innerHTML = '🔄 Probando conectividad con el backend...';
+            status.className = 'loading';
+            
+            try {
+                // Test 1: Health check
+                console.log('🧪 Test 1: Health Check');
+                const healthResponse = await fetch('http://localhost:8000/health');
+                const healthData = await healthResponse.json();
+                
+                testResults.push({
+                    test: 'Health Check',
+                    status: 'success',
+                    message: `✅ Backend responde correctamente`,
+                    data: healthData
+                });
+                
+                // Test 2: Especiales
+                console.log('🧪 Test 2: Especiales del día');
+                const specialsResponse = await fetch('http://localhost:8000/specials');
+                const specialsData = await specialsResponse.json();
+                
+                testResults.push({
+                    test: 'Especiales del día',
+                    status: 'success',
+                    message: `✅ ${specialsData.length} especiales cargados`,
+                    data: specialsData
+                });
+                
+                // Test 3: Productos
+                console.log('🧪 Test 3: Lista de productos');
+                const productsResponse = await fetch('http://localhost:8000/products');
+                const productsData = await productsResponse.json();
+                
+                testResults.push({
+                    test: 'Lista de productos',
+                    status: 'success', 
+                    message: `✅ ${productsData.length} productos disponibles`,
+                    data: productsData.slice(0, 2) // Solo mostrar primeros 2
+                });
+                
+                status.innerHTML = '✅ Todas las pruebas de conectividad pasaron exitosamente';
+                status.className = 'success';
+                
+            } catch (error) {
+                console.error('❌ Error en las pruebas:', error);
+                testResults.push({
+                    test: 'Conectividad',
+                    status: 'error',
+                    message: `❌ Error: ${error.message}`,
+                    data: { error: error.toString() }
+                });
+                
+                status.innerHTML = '❌ Error en las pruebas de conectividad';
+                status.className = 'error';
+            }
+            
+            displayResults();
+        }
+        
+        async function testFrontend() {
+            const status = document.getElementById('status');
+            
+            status.innerHTML = '🔄 Verificando el frontend React...';
+            status.className = 'loading';
+            
+            try {
+                const response = await fetch('http://localhost:5173');
+                if (response.ok) {
+                    testResults.push({
+                        test: 'Frontend React',
+                        status: 'success',
+                        message: '✅ Frontend responde correctamente en puerto 5173',
+                        data: { status: response.status, url: response.url }
+                    });
+                    
+                    status.innerHTML = '✅ Frontend funcionando correctamente';
+                    status.className = 'success';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                testResults.push({
+                    test: 'Frontend React',
+                    status: 'error',
+                    message: `❌ Frontend no responde: ${error.message}`,
+                    data: { error: error.toString() }
+                });
+                
+                status.innerHTML = '❌ Frontend no está funcionando';
+                status.className = 'error';
+            }
+            
+            displayResults();
+        }
+        
+        function displayResults() {
+            const resultsDiv = document.getElementById('detailed-results');
+            let html = '<h2>📊 Resultados de las Pruebas</h2>';
+            
+            testResults.forEach((result, index) => {
+                const cssClass = result.status === 'success' ? 'success' : 'error';
+                html += `
+                    <div class="${cssClass}">
+                        <h3>Test ${index + 1}: ${result.test}</h3>
+                        <p>${result.message}</p>
+                        <details>
+                            <summary>Ver datos</summary>
+                            <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function clearResults() {
+            testResults = [];
+            document.getElementById('detailed-results').innerHTML = '';
+            document.getElementById('status').innerHTML = '✨ Resultados limpiados';
+            document.getElementById('status').className = 'loading';
+        }
+        
+        // Ejecutar test automáticamente al cargar la página
+        window.onload = function() {
+            setTimeout(() => {
+                testConnectivity();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

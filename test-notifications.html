@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notificaciones - Café Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #8b4513;
+            text-align: center;
+        }
+        button {
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #a0522d;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border-left: 4px solid #8b4513;
+        }
+        .success { border-left-color: #28a745; }
+        .error { border-left-color: #dc3545; }
+        #log {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Test Notificaciones - Café Demo</h1>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="testLogin()">1. Login Admin</button>
+            <button onclick="createNotifications()">2. Crear Notificaciones</button>
+            <button onclick="testNotificationEndpoints()">3. Test Endpoints</button>
+            <button onclick="clearLog()">Limpiar Log</button>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let adminToken = null;
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#00ff00';
+            logElement.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function testLogin() {
+            log('🔑 Intentando login de admin...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    adminToken = data.access_token;
+                    log(`✅ Login exitoso! Token: ${adminToken.substring(0, 20)}...`, 'success');
+                } else {
+                    log(`❌ Error en login: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        async function createNotifications() {
+            log('🧪 Creando notificaciones de prueba...', 'info');
+
+            // Contacto
+            try {
+                const contactResp = await fetch(`${API_BASE}/contact`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'Usuario Prueba',
+                        email: 'prueba@test.com',
+                        subject: 'Consulta de prueba',
+                        message: 'Este es un mensaje de prueba para generar una notificación'
+                    })
+                });
+                log(`📧 Contacto: ${contactResp.status}`, contactResp.ok ? 'success' : 'error');
+            } catch (e) {
+                log(`❌ Error contacto: ${e.message}`, 'error');
+            }
+
+            // Newsletter
+            try {
+                const newsletterResp = await fetch(`${API_BASE}/newsletter/subscribe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'newsletter@test.com',
+                        name: 'Suscriptor Prueba'
+                    })
+                });
+                log(`📰 Newsletter: ${newsletterResp.status}`, newsletterResp.ok ? 'success' : 'error');
+            } catch (e) {
+                log(`❌ Error newsletter: ${e.message}`, 'error');
+            }
+
+            // Reserva
+            try {
+                const reservationResp = await fetch(`${API_BASE}/reservations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: 'Cliente Reserva',
+                        customer_email: 'reserva@test.com',
+                        customer_phone: '+34 666 777 888',
+                        party_size: 4,
+                        reservation_date: '2025-08-16',
+                        reservation_time: '19:30',
+                        notes: 'Reserva de prueba'
+                    })
+                });
+                log(`📅 Reserva: ${reservationResp.status}`, reservationResp.ok ? 'success' : 'error');
+            } catch (e) {
+                log(`❌ Error reserva: ${e.message}`, 'error');
+            }
+
+            // Pedido
+            try {
+                const orderResp = await fetch(`${API_BASE}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: 'Cliente Pedido',
+                        customer_email: 'pedido@test.com',
+                        customer_phone: '+34 555 666 777',
+                        items: [{
+                            product_id: 1,
+                            product_name: 'Cappuccino Clásico',
+                            quantity: 2,
+                            price: 3.50,
+                            notes: 'Sin azúcar'
+                        }],
+                        notes: 'Pedido de prueba'
+                    })
+                });
+                log(`🛒 Pedido: ${orderResp.status}`, orderResp.ok ? 'success' : 'error');
+            } catch (e) {
+                log(`❌ Error pedido: ${e.message}`, 'error');
+            }
+
+            log('✨ Notificaciones creadas! Espera 2 segundos y prueba los endpoints.', 'success');
+        }
+
+        async function testNotificationEndpoints() {
+            if (!adminToken) {
+                log('❌ Necesitas hacer login primero', 'error');
+                return;
+            }
+
+            log('🔔 Probando endpoints de notificaciones...', 'info');
+            const headers = { 'Authorization': `Bearer ${adminToken}` };
+
+            // Conteo no leídas
+            try {
+                const unreadResp = await fetch(`${API_BASE}/admin/notifications/unread`, { headers });
+                if (unreadResp.ok) {
+                    const data = await unreadResp.json();
+                    log(`📊 No leídas: ${data.total_unread} | Por tipo: ${JSON.stringify(data.by_type)}`, 'success');
+                } else {
+                    log(`❌ Error unread: ${unreadResp.status}`, 'error');
+                }
+            } catch (e) {
+                log(`❌ Error unread: ${e.message}`, 'error');
+            }
+
+            // Todas las notificaciones
+            try {
+                const allResp = await fetch(`${API_BASE}/admin/notifications`, { headers });
+                if (allResp.ok) {
+                    const notifications = await allResp.json();
+                    log(`📋 Total notificaciones: ${notifications.length}`, 'success');
+                    notifications.slice(0, 3).forEach(n => {
+                        log(`  • ${n.title}: ${n.message} (${n.is_read ? 'leída' : 'NO leída'})`, 'info');
+                    });
+                } else {
+                    log(`❌ Error all: ${allResp.status}`, 'error');
+                }
+            } catch (e) {
+                log(`❌ Error all: ${e.message}`, 'error');
+            }
+        }
+
+        // Log inicial
+        log('🚀 Test de notificaciones iniciado');
+        log('1. Haz click en "Login Admin" para autenticarte');
+        log('2. Haz click en "Crear Notificaciones" para generar datos de prueba');
+        log('3. Haz click en "Test Endpoints" para verificar que funcionen los endpoints');
+        log('4. Luego ve al panel de administración para ver las notificaciones 🔔');
+    </script>
+</body>
+</html>
