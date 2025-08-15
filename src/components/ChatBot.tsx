@@ -95,7 +95,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
     setIsTyping(true);
 
     try {
-      const response = await fetch('http://localhost:8000/chat', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -260,7 +260,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
                 placeholder={placeholder}
                 disabled={isLoading}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-opacity-50 disabled:opacity-50"
-                style={{ focusRingColor: primaryColor }}
+                style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
               />
               <button
                 onClick={sendMessage}
@@ -303,7 +303,7 @@ const ChatBot: React.FC<ChatBotProps> = ({
       </button>
 
       {/* Estilos personalizados */}
-      <style jsx>{`
+      <style>{`
         @keyframes scale-up {
           from {
             transform: scale(0.95);

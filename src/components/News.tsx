@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaCalendarAlt, FaUser, FaEye, FaArrowRight, FaSearch, FaTags } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaArrowRight, FaSearch, FaTags } from 'react-icons/fa';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
