@@ -337,10 +337,21 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Configuración JWT
-SECRET_KEY = "tu_clave_secreta_muy_segura_aqui_123!"
+# Configuración JWT - Variables de entorno requeridas
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
+    
 ALGORITHM = "HS256"
 security = HTTPBearer()
+
+# Configuración Admin - Variables de entorno requeridas
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_USERNAME or not ADMIN_PASSWORD:
+    raise ValueError("ADMIN_USERNAME and ADMIN_PASSWORD environment variables are required")
+
+ADMIN_PASSWORD_HASH = hash_password(ADMIN_PASSWORD)
 
 # Función para crear tokens JWT
 def create_access_token(data: dict):
@@ -384,15 +395,22 @@ print("📚 Documentación en http://localhost:8000/docs")
 print("🔑 Admin login: admin / admin123")
 
 # Configurar CORS
+# Obtener origenes permitidos desde variables de entorno
+allowed_origins = [
+    "http://localhost:5173", 
+    "http://localhost:5174", 
+    "http://localhost:3000",
+    "https://*.vercel.app",  # Permitir todos los subdominios de Vercel
+]
+
+# Agregar URL del frontend si está configurada
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173", 
-        "http://localhost:5174", 
-        "http://localhost:3000",
-        "https://*.vercel.app",  # Permitir todos los subdominios de Vercel
-        # TODO: Añadir aquí tu URL específica de Vercel después del despliegue
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -547,8 +565,9 @@ async def upload_product_image(file: UploadFile = File(...), current_user: str =
 
 @app.post("/admin/login", summary="Login de administrador")
 async def admin_login(credentials: AdminLogin):
-    # Para demo: usuario admin con contraseña admin123
-    if credentials.username == "admin" and credentials.password == "admin123":
+    # Verificar credenciales usando variables de entorno
+    if (credentials.username == ADMIN_USERNAME and 
+        hash_password(credentials.password) == ADMIN_PASSWORD_HASH):
         token = create_access_token({"sub": credentials.username})
         return {
             "access_token": token,
