@@ -337,6 +337,10 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Hash de contraseña (mover antes de usarse)
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
 # Configuración JWT - Variables de entorno requeridas
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
@@ -374,9 +378,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-# Hash de contraseña
-def hash_password(password: str) -> str:
-    return hashlib.sha256(password.encode()).hexdigest()
+# Hash de contraseña ya definido arriba
 
 # Inicializar carpeta de uploads
 def init_uploads():
