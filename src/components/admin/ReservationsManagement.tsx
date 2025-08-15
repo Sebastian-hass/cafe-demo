@@ -17,6 +17,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface Reservation {
   id: number;
   customer_name: string;
@@ -62,7 +63,7 @@ const ReservationsManagement: React.FC<ReservationsManagementProps> = ({ token }
 
   const fetchReservations = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/reservations', {
+      const response = await axios.get(`${API_URL}/admin/reservations`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -78,7 +79,7 @@ const ReservationsManagement: React.FC<ReservationsManagementProps> = ({ token }
 
   const fetchReservationStats = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/reservations/stats', {
+      const response = await axios.get(`${API_URL}/admin/reservations/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -91,7 +92,7 @@ const ReservationsManagement: React.FC<ReservationsManagementProps> = ({ token }
 
   const updateReservationStatus = async (reservationId: number, newStatus: string) => {
     try {
-      await axios.put(`http://localhost:8000/admin/reservations/${reservationId}/status`, 
+      await axios.put(`${API_URL}/admin/reservations/${reservationId}/status`, 
         { status: newStatus },
         {
           headers: {
@@ -121,7 +122,7 @@ const ReservationsManagement: React.FC<ReservationsManagementProps> = ({ token }
     if (!confirm('¿Estás seguro de que deseas eliminar esta reserva?')) return;
 
     try {
-      await axios.delete(`http://localhost:8000/admin/reservations/${reservationId}`, {
+      await axios.delete(`${API_URL}/admin/reservations/${reservationId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

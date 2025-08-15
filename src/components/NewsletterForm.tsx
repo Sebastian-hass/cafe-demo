@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaPaperPlane } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../config/api';
 
 interface NewsletterFormProps {
   className?: string;
@@ -24,7 +25,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ className = "" }) => {
     setLoading(true);
     
     try {
-      const response = await axios.post('http://localhost:8000/newsletter/subscribe', {
+      const response = await axios.post(`${API_URL}/newsletter/subscribe`, {
         email,
         name: name || undefined
       });

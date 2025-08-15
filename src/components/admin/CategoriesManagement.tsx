@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface Category {
   id: string;
   name: string;
@@ -42,7 +43,7 @@ const CategoriesManagement: React.FC<CategoriesManagementProps> = ({ token }) =>
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/categories', {
+      const response = await axios.get(`${API_URL}/admin/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,7 +66,7 @@ const CategoriesManagement: React.FC<CategoriesManagementProps> = ({ token }) =>
     }
 
     try {
-      await axios.post('http://localhost:8000/admin/categories', 
+      await axios.post(`${API_URL}/admin/categories`, 
         {
           id: categoryForm.id,
           name: categoryForm.name,
@@ -100,7 +101,7 @@ const CategoriesManagement: React.FC<CategoriesManagementProps> = ({ token }) =>
     }
 
     try {
-      await axios.put(`http://localhost:8000/admin/categories/${editingCategory.id}`, 
+      await axios.put(`${API_URL}/admin/categories/${editingCategory.id}`, 
         {
           name: categoryForm.name,
           description: categoryForm.description || undefined,
@@ -131,7 +132,7 @@ const CategoriesManagement: React.FC<CategoriesManagementProps> = ({ token }) =>
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/categories/${categoryId}`, {
+      await axios.delete(`${API_URL}/admin/categories/${categoryId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

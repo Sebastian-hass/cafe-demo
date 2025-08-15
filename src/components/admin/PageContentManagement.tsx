@@ -22,6 +22,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface PageContent {
   id: string;
   title: string;
@@ -112,7 +113,7 @@ const PageContentManagement: React.FC<PageContentManagementProps> = ({ token }) 
 
   const fetchContents = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/content', {
+      const response = await axios.get(`${API_URL}/admin/content`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setContents(response.data);
@@ -135,13 +136,13 @@ const PageContentManagement: React.FC<PageContentManagementProps> = ({ token }) 
     try {
       if (editingContent) {
         await axios.put(
-          `http://localhost:8000/admin/content/${editingContent.id}`,
+          `${API_URL}/admin/content/${editingContent.id}`,
           formData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         toast.success('Contenido actualizado correctamente');
       } else {
-        await axios.post('http://localhost:8000/admin/content', formData, {
+        await axios.post(`${API_URL}/admin/content`, formData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         toast.success('Contenido creado correctamente');
@@ -166,7 +167,7 @@ const PageContentManagement: React.FC<PageContentManagementProps> = ({ token }) 
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/content/${id}`, {
+      await axios.delete(`${API_URL}/admin/content/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       toast.success('Contenido eliminado correctamente');

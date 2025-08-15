@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../../config/api';
 
 interface Product {
   id: number;
@@ -51,7 +52,7 @@ const SpecialsManagement: React.FC<SpecialsManagementProps> = ({ token }) => {
 
   const fetchSpecials = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/specials', {
+      const response = await axios.get(`${API_URL}/admin/specials`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setSpecials(response.data);
@@ -63,7 +64,7 @@ const SpecialsManagement: React.FC<SpecialsManagementProps> = ({ token }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/products', {
+      const response = await axios.get(`${API_URL}/admin/products`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setProducts(response.data.filter((p: Product) => p.available));
@@ -77,7 +78,7 @@ const SpecialsManagement: React.FC<SpecialsManagementProps> = ({ token }) => {
 
   const handleCreateSpecial = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/admin/specials', formData, {
+      const response = await axios.post(`${API_URL}/admin/specials`, formData, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       toast.success('¡Especial creado exitosamente!');
@@ -93,7 +94,7 @@ const SpecialsManagement: React.FC<SpecialsManagementProps> = ({ token }) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este especial?')) return;
     
     try {
-      await axios.delete(`http://localhost:8000/admin/specials/${specialId}`, {
+      await axios.delete(`${API_URL}/admin/specials/${specialId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setSpecials(specials.filter(s => s.id !== specialId));

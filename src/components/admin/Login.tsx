@@ -4,6 +4,7 @@ import { FaUser, FaLock, FaEye, FaEyeSlash, FaCoffee } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface LoginProps {
   onLogin: (token: string, user: any) => void;
 }
@@ -21,7 +22,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/admin/login', credentials);
+      const response = await axios.post(`${API_URL}/admin/login`, credentials);
       
       if (response.data.access_token) {
         localStorage.setItem('admin_token', response.data.access_token);

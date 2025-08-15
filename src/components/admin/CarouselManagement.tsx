@@ -20,6 +20,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface CarouselImage {
   id: number;
   title: string;
@@ -64,7 +65,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
 
   const fetchImages = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/carousel', {
+      const response = await axios.get(`${API_URL}/admin/carousel`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setImages(response.data.sort((a: CarouselImage, b: CarouselImage) => a.order_position - b.order_position));
@@ -93,13 +94,13 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
 
       if (editingImage) {
         await axios.put(
-          `http://localhost:8000/admin/carousel/${editingImage.id}`,
+          `${API_URL}/admin/carousel/${editingImage.id}`,
           formData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         toast.success('Imagen actualizada correctamente');
       } else {
-        await axios.post('http://localhost:8000/admin/carousel', formData, {
+        await axios.post(`${API_URL}/admin/carousel`, formData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         toast.success('Imagen agregada correctamente');
@@ -120,7 +121,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/carousel/${id}`, {
+      await axios.delete(`${API_URL}/admin/carousel/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       toast.success('Imagen eliminada correctamente');
@@ -167,7 +168,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
     uploadFormData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:8000/admin/upload-image', uploadFormData, {
+      const response = await axios.post(`${API_URL}/admin/upload-image`, uploadFormData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -187,7 +188,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
   const toggleActive = async (image: CarouselImage) => {
     try {
       await axios.put(
-        `http://localhost:8000/admin/carousel/${image.id}`,
+        `${API_URL}/admin/carousel/${image.id}`,
         { active: !image.active },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -217,13 +218,13 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
     try {
       // Intercambiar posiciones
       await axios.put(
-        `http://localhost:8000/admin/carousel/${currentImage.id}`,
+        `${API_URL}/admin/carousel/${currentImage.id}`,
         { order_position: swapImage.order_position },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
 
       await axios.put(
-        `http://localhost:8000/admin/carousel/${swapImage.id}`,
+        `${API_URL}/admin/carousel/${swapImage.id}`,
         { order_position: currentImage.order_position },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -245,7 +246,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
         const newPosition = i + 1;
         if (sortedImages[i].order_position !== newPosition) {
           await axios.put(
-            `http://localhost:8000/admin/carousel/${sortedImages[i].id}`,
+            `${API_URL}/admin/carousel/${sortedImages[i].id}`,
             { order_position: newPosition },
             { headers: { 'Authorization': `Bearer ${token}` } }
           );
@@ -382,7 +383,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
                 {/* Image */}
                 <div className="relative">
                   <img
-                    src={`http://localhost:8000${image.image}`}
+                    src={`${API_URL}${image.image}`}
                     alt={image.title}
                     className="w-full h-48 object-cover"
                   />
@@ -535,7 +536,7 @@ const CarouselManagement: React.FC<CarouselManagementProps> = ({ token }) => {
                     {formData.image && (
                       <div className="mt-3">
                         <img
-                          src={`http://localhost:8000${formData.image}`}
+                          src={`${API_URL}${formData.image}`}
                           alt="Preview"
                           className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
                         />

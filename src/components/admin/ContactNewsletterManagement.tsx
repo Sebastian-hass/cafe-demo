@@ -18,6 +18,7 @@ FaTrash
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface ContactMessage {
   id: number;
   name: string;
@@ -74,7 +75,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
   const fetchContacts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/admin/contacts', {
+      const response = await axios.get(`${API_URL}/admin/contacts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setContacts(response.data);
@@ -89,7 +90,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
   const fetchSubscribers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/admin/newsletter/subscribers', {
+      const response = await axios.get(`${API_URL}/admin/newsletter/subscribers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setSubscribers(response.data);
@@ -103,7 +104,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
 
   const sendNewsletter = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/admin/newsletter/send', newsletterData, {
+      const response = await axios.post(`${API_URL}/admin/newsletter/send`, newsletterData, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -122,7 +123,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/contacts/${contactId}`, {
+      await axios.delete(`${API_URL}/admin/contacts/${contactId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -144,7 +145,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/newsletter/subscribers/${subscriberId}`, {
+      await axios.delete(`${API_URL}/admin/newsletter/subscribers/${subscriberId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

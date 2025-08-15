@@ -20,6 +20,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface NewsArticle {
   id: number;
   title: string;
@@ -81,7 +82,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
 
   const fetchArticles = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/news', {
+      const response = await axios.get(`${API_URL}/admin/news`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setArticles(response.data);
@@ -109,13 +110,13 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
 
       if (editingArticle) {
         await axios.put(
-          `http://localhost:8000/admin/news/${editingArticle.id}`,
+          `${API_URL}/admin/news/${editingArticle.id}`,
           articleData,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         toast.success('Noticia actualizada correctamente');
       } else {
-        await axios.post('http://localhost:8000/admin/news', articleData, {
+        await axios.post(`${API_URL}/admin/news`, articleData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         toast.success('Noticia creada correctamente');
@@ -136,7 +137,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/news/${id}`, {
+      await axios.delete(`${API_URL}/admin/news/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       toast.success('Noticia eliminada correctamente');
@@ -188,7 +189,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
     formData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:8000/admin/upload-image', formData, {
+      const response = await axios.post(`${API_URL}/admin/upload-image`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -225,7 +226,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
   const togglePublished = async (article: NewsArticle) => {
     try {
       await axios.put(
-        `http://localhost:8000/admin/news/${article.id}`,
+        `${API_URL}/admin/news/${article.id}`,
         { published: !article.published },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -240,7 +241,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
   const toggleFeatured = async (article: NewsArticle) => {
     try {
       await axios.put(
-        `http://localhost:8000/admin/news/${article.id}`,
+        `${API_URL}/admin/news/${article.id}`,
         { featured: !article.featured },
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
@@ -396,7 +397,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
                       <div className="flex items-center">
                         {article.image && (
                           <img
-                            src={`http://localhost:8000${article.image}`}
+                            src={`${API_URL}${article.image}`}
                             alt={article.title}
                             className="w-12 h-12 rounded-lg object-cover mr-4"
                           />
@@ -613,7 +614,7 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
                       </div>
                       {formData.image && (
                         <img
-                          src={`http://localhost:8000${formData.image}`}
+                          src={`${API_URL}${formData.image}`}
                           alt="Preview"
                           className="mt-2 w-24 h-24 object-cover rounded-lg"
                         />

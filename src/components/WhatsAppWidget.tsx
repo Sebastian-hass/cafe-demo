@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import { API_URL } from '../config/api';
 interface WhatsAppWidgetProps {
   phoneNumber?: string;
   message?: string;
@@ -39,7 +40,7 @@ const WhatsAppWidget: React.FC<WhatsAppWidgetProps> = ({
 
   const handleTestChatbot = async () => {
     try {
-      const response = await fetch('http://localhost:8000/chatbot/test', {
+      const response = await fetch(`${API_URL}/chatbot/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

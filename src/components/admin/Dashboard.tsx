@@ -28,6 +28,7 @@ import CategoriesManagement from './CategoriesManagement';
 import ReservationsManagement from './ReservationsManagement';
 import NewsManagement from './NewsManagement';
 
+import { API_URL } from '../../config/api';
 interface DashboardProps {
   token: string;
   user: any;
@@ -80,7 +81,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token, user }) => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/dashboard', {
+      const response = await axios.get(`${API_URL}/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

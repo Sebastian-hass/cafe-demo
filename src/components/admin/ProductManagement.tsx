@@ -15,6 +15,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface Product {
   id: number;
   name: string;
@@ -57,7 +58,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/products', {
+      const response = await axios.get(`${API_URL}/admin/products`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setProducts(response.data);
@@ -71,7 +72,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/categories', {
+      const response = await axios.get(`${API_URL}/admin/categories`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setCategories(response.data);
@@ -83,7 +84,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
 
   const handleCreateProduct = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/admin/products', formData, {
+      const response = await axios.post(`${API_URL}/admin/products`, formData, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setProducts([response.data, ...products]);
@@ -100,7 +101,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
     
     try {
       const response = await axios.put(
-        `http://localhost:8000/admin/products/${editingProduct.id}`, 
+        `${API_URL}/admin/products/${editingProduct.id}`, 
         formData,
         { headers: { 'Authorization': `Bearer ${token}` }}
       );
@@ -117,7 +118,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     
     try {
-      await axios.delete(`http://localhost:8000/admin/products/${productId}`, {
+      await axios.delete(`${API_URL}/admin/products/${productId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setProducts(products.filter(p => p.id !== productId));
@@ -190,7 +191,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token }) => {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
       
-      const response = await axios.post('http://localhost:8000/admin/upload-image', formDataUpload, {
+      const response = await axios.post(`${API_URL}/admin/upload-image`, formDataUpload, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

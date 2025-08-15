@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { API_URL } from '../config/api';
 
 interface Product {
   id: number;
@@ -25,7 +26,7 @@ const SimpleHome: React.FC = () => {
     queryFn: async () => {
       console.log('🔍 Haciendo request a especiales...');
       try {
-        const response = await axios.get('http://localhost:8000/specials', {
+        const response = await axios.get(`${API_URL}/specials`, {
           timeout: 5000  // 5 segundos de timeout
         });
         console.log('✅ Datos recibidos:', response.data);
@@ -131,7 +132,7 @@ const SimpleHome: React.FC = () => {
           <h2>🔗 Enlaces de Prueba</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
             <a 
-              href="http://localhost:8000/docs" 
+              href={`${API_URL}/docs`} 
               target="_blank"
               style={{ 
                 backgroundColor: '#8b4513', 
@@ -145,7 +146,7 @@ const SimpleHome: React.FC = () => {
               📚 API Docs
             </a>
             <a 
-              href="http://localhost:8000/specials" 
+              href={`${API_URL}/specials`} 
               target="_blank"
               style={{ 
                 backgroundColor: '#16a34a', 

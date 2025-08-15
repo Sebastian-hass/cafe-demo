@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaChevronLeft, FaChevronRight, FaStar, FaHeart, FaPlay, FaClock, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 import NewsletterForm from '../components/NewsletterForm';
+import { API_URL } from '../config/api';
 
 // Tipos definidos localmente para evitar problemas de importación
 interface Product {
@@ -25,7 +26,7 @@ interface Special {
   date: string;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = API_URL;
 
 // Componente para el carrusel de héroe
 const HeroCarousel: React.FC = () => {

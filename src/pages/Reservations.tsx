@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../config/api';
 interface ReservationCreate {
   customer_name: string;
   customer_email: string;
@@ -30,7 +31,7 @@ interface AvailabilitySlot {
   current_reservations: number;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = API_URL;
 
 const Reservations: React.FC = () => {
   const [reservationForm, setReservationForm] = useState<ReservationCreate>({

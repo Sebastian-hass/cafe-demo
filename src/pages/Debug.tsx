@@ -2,12 +2,13 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
+import { API_URL } from '../config/api';
 const Debug: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['debug-test'],
     queryFn: async () => {
       console.log('🔍 Haciendo request a la API...');
-      const response = await axios.get('http://localhost:8000/health');
+      const response = await axios.get(`${API_URL}/health`);
       console.log('✅ Respuesta recibida:', response.data);
       return response.data;
     },
@@ -42,7 +43,7 @@ const Debug: React.FC = () => {
               <div className="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
                 <h4 className="font-medium text-yellow-800">💡 Posibles soluciones:</h4>
                 <ul className="list-disc list-inside text-yellow-700 mt-2 space-y-1">
-                  <li>Verifica que el backend esté corriendo en <code>http://localhost:8000</code></li>
+                  <li>Verifica que el backend esté corriendo en <code>{API_URL}</code></li>
                   <li>Revisa la consola del navegador para errores de CORS</li>
                   <li>Asegúrate de que no haya un firewall bloqueando la conexión</li>
                 </ul>
@@ -66,36 +67,36 @@ const Debug: React.FC = () => {
             <h3 className="text-xl font-semibold mb-4">🌐 URLs de Prueba</h3>
             <div className="space-y-2">
               <a 
-                href="http://localhost:8000" 
+                href={`${API_URL}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-blue-600 hover:underline"
               >
-                http://localhost:8000 - API Root
+                {API_URL} - API Root
               </a>
               <a 
-                href="http://localhost:8000/docs" 
+                href={`${API_URL}/docs`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-blue-600 hover:underline"
               >
-                http://localhost:8000/docs - API Documentation
+                {API_URL}/docs - API Documentation
               </a>
               <a 
-                href="http://localhost:8000/health" 
+                href={`${API_URL}/health`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-blue-600 hover:underline"
               >
-                http://localhost:8000/health - Health Check
+                {API_URL}/health - Health Check
               </a>
               <a 
-                href="http://localhost:8000/specials" 
+                href={`${API_URL}/specials`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-blue-600 hover:underline"
               >
-                http://localhost:8000/specials - Especiales del día
+                {API_URL}/specials - Especiales del día
               </a>
             </div>
           </div>
@@ -103,8 +104,8 @@ const Debug: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="text-xl font-semibold mb-4">🛠️ Información del Sistema</h3>
             <div className="text-sm space-y-1">
-              <p><strong>Frontend:</strong> http://localhost:5173</p>
-              <p><strong>Backend:</strong> http://localhost:8000</p>
+              <p><strong>Frontend:</strong> {window.location.origin}</p>
+              <p><strong>Backend:</strong> {API_URL}</p>
               <p><strong>User Agent:</strong> {navigator.userAgent}</p>
               <p><strong>Fecha:</strong> {new Date().toLocaleString()}</p>
             </div>

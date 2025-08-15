@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface NotificationCenterProps {
   token: string;
 }
@@ -49,7 +50,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ token }) => {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/admin/notifications', {
+      const response = await axios.get(`${API_URL}/admin/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setNotifications(response.data);
@@ -63,7 +64,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ token }) => {
 
   const fetchUnreadCounts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/notifications/unread', {
+      const response = await axios.get(`${API_URL}/admin/notifications/unread`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setUnreadCounts(response.data);
@@ -74,7 +75,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ token }) => {
 
   const markAsRead = async (notificationId: number) => {
     try {
-      await axios.put(`http://localhost:8000/admin/notifications/${notificationId}/read`, {}, {
+      await axios.put(`${API_URL}/admin/notifications/${notificationId}/read`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -92,7 +93,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ token }) => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.put('http://localhost:8000/admin/notifications/mark-all-read', {}, {
+      await axios.put(`${API_URL}/admin/notifications/mark-all-read`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -107,7 +108,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ token }) => {
 
   const deleteNotification = async (notificationId: number) => {
     try {
-      await axios.delete(`http://localhost:8000/admin/notifications/${notificationId}`, {
+      await axios.delete(`${API_URL}/admin/notifications/${notificationId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

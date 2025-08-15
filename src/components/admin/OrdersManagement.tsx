@@ -15,6 +15,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface OrderItem {
   product_id: number;
   product_name: string;
@@ -66,7 +67,7 @@ const OrdersManagement: React.FC<OrdersManagementProps> = ({ token }) => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/orders', {
+      const response = await axios.get(`${API_URL}/admin/orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -82,7 +83,7 @@ const OrdersManagement: React.FC<OrdersManagementProps> = ({ token }) => {
 
   const fetchOrderStats = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/admin/orders/stats', {
+      const response = await axios.get(`${API_URL}/admin/orders/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -95,7 +96,7 @@ const OrdersManagement: React.FC<OrdersManagementProps> = ({ token }) => {
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
     try {
-      await axios.put(`http://localhost:8000/admin/orders/${orderId}/status`, 
+      await axios.put(`${API_URL}/admin/orders/${orderId}/status`, 
         { status: newStatus },
         {
           headers: {
@@ -121,7 +122,7 @@ const OrdersManagement: React.FC<OrdersManagementProps> = ({ token }) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este pedido?')) return;
 
     try {
-      await axios.delete(`http://localhost:8000/admin/orders/${orderId}`, {
+      await axios.delete(`${API_URL}/admin/orders/${orderId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

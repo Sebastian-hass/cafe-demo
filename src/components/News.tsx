@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import NewsletterForm from './NewsletterForm';
 
+import { API_URL } from '../config/api';
 interface NewsItem {
   id: number;
   title: string;
@@ -40,7 +41,7 @@ const News: React.FC = () => {
   const fetchNews = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/news');
+      const response = await axios.get(`${API_URL}/news`);
       // Filtrar solo noticias publicadas
       const publishedNews = response.data.filter((item: NewsItem) => item.published);
       setNews(publishedNews);
@@ -104,7 +105,7 @@ const News: React.FC = () => {
       {item.image && (
         <div className="relative h-48 overflow-hidden">
           <img
-            src={`http://localhost:8000${item.image}`}
+            src={`${API_URL}${item.image}`}
             alt={item.title}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
           />
@@ -362,7 +363,7 @@ const News: React.FC = () => {
             <div className="p-6">
               {selectedNews.image && (
                 <img
-                  src={`http://localhost:8000${selectedNews.image}`}
+                  src={`${API_URL}${selectedNews.image}`}
                   alt={selectedNews.title}
                   className="w-full h-64 object-cover rounded-lg mb-6"
                 />

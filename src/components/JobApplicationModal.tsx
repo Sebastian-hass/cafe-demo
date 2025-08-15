@@ -4,6 +4,7 @@ import { FaTimes, FaBriefcase, FaUser, FaEnvelope, FaPhone, FaFileUpload } from 
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../config/api';
 interface JobApplicationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,7 +49,7 @@ const JobApplicationModal: React.FC<JobApplicationModalProps> = ({ isOpen, onClo
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/jobs/apply', formData);
+      const response = await axios.post(`${API_URL}/jobs/apply`, formData);
       
       if (response.data.success) {
         toast.success('¡Aplicación enviada correctamente! Te contactaremos pronto.');

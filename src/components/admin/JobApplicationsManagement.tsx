@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+import { API_URL } from '../../config/api';
 interface JobApplication {
   id: number;
   name: string;
@@ -42,7 +43,7 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
   const fetchJobApplications = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/admin/job-applications', {
+        const response = await axios.get(`${API_URL}/admin/job-applications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setApplications(response.data);
@@ -60,7 +61,7 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
     }
 
     try {
-      await axios.delete(`http://localhost:8000/admin/job-applications/${applicationId}`, {
+      await axios.delete(`${API_URL}/admin/job-applications/${applicationId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       

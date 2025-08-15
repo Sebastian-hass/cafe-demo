@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
+import { API_URL } from '../config/api';
 
 // Tipos definidos localmente para evitar problemas de importación
 interface Product {
@@ -40,7 +41,7 @@ interface OrderData {
   notes?: string;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = API_URL;
 
 const Menu: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
