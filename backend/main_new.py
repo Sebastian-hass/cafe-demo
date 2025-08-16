@@ -510,6 +510,48 @@ async def subscribe_newsletter(subscription: NewsletterSubscription, db: Session
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 # ================================
+# ADMIN UPLOAD ENDPOINT
+# ================================
+
+@app.post("/admin/upload-image", summary="[ADMIN] Subir imagen de producto")
+async def upload_product_image(file: UploadFile = File(...), current_user: str = Depends(verify_token)):
+    try:
+        # Validar tipo de archivo
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="El archivo debe ser una imagen")
+        
+        # Validar tamaño (max 5MB)
+        file_content = await file.read()
+        if len(file_content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="La imagen debe ser menor a 5MB")
+        
+        # Generar nombre único
+        file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+        unique_filename = f"{int(datetime.now().timestamp())}_{file.filename}"
+        file_path = f"uploads/products/{unique_filename}"
+        
+        # Crear directorio si no existe
+        os.makedirs("uploads/products", exist_ok=True)
+        
+        # Guardar archivo
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        # Retornar URL relativa para usar en el frontend
+        return {
+            "success": True,
+            "filename": unique_filename,
+            "url": f"/uploads/products/{unique_filename}",
+            "message": "Imagen subida exitosamente"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error subiendo imagen: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+# ================================
 # CHATBOT ENDPOINTS
 # ================================
 

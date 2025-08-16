@@ -47,12 +47,25 @@ def get_menu_context() -> str:
             Product.available == True
         ).order_by(Product.category, Product.name).all()
         
-        # Obtener especiales del día
+        # Obtener especiales del día con eager loading
         today = date.today().isoformat()
         specials = db.query(Special).join(Product).filter(
             Special.date == today,
             Product.available == True
         ).all()
+        
+        # Procesar especiales antes de cerrar la sesión
+        specials_info = []
+        if specials:
+            for special in specials:
+                product = special.product  # Acceder al producto mientras la sesión está activa
+                specials_info.append({
+                    'name': product.name,
+                    'description': product.description or 'Sin descripción',
+                    'original_price': product.price,
+                    'discount': special.discount,
+                    'discounted_price': product.price * (1 - special.discount / 100)
+                })
         
         db.close()
         
@@ -72,12 +85,10 @@ def get_menu_context() -> str:
             menu_text += "\n".join(items) + "\n\n"
         
         # Agregar especiales si existen
-        if specials:
+        if specials_info:
             menu_text += "🎉 ESPECIALES DEL DÍA:\n"
-            for special in specials:
-                product = special.product
-                discounted_price = product.price * (1 - special.discount / 100)
-                menu_text += f"• {product.name}: {product.description or 'Sin descripción'} - €{discounted_price:.2f} (antes €{product.price:.2f}, -{special.discount}% descuento)\n"
+            for special in specials_info:
+                menu_text += f"• {special['name']}: {special['description']} - €{special['discounted_price']:.2f} (antes €{special['original_price']:.2f}, -{special['discount']}% descuento)\n"
             menu_text += "\n"
         
         return menu_text
