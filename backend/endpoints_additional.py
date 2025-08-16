@@ -137,15 +137,28 @@ def setup_additional_routes(app):
     @app.get("/reservations/availability/{reservation_date}", summary="Verificar disponibilidad")
     async def check_availability(reservation_date: str, db: Session = Depends(get_db)):
         """Endpoint básico de disponibilidad - siempre disponible por ahora"""
+        # Crear horarios con la estructura que espera el frontend
+        time_slots = [
+            "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+            "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+            "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
+            "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
+        ]
+        
+        # Convertir a la estructura que espera el frontend
+        available_times = [
+            {
+                "time": time_slot,
+                "available": True,
+                "current_reservations": 0
+            }
+            for time_slot in time_slots
+        ]
+        
         return {
             "date": reservation_date,
             "available": True,
-            "available_times": [
-                "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-                "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-                "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-                "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
-            ]
+            "available_times": available_times
         }
     
     @app.get("/admin/reservations", summary="[ADMIN] Obtener todas las reservas")
