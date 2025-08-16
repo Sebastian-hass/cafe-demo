@@ -436,23 +436,81 @@ async def send_contact_message(message: ContactMessageModel, db: Session = Depen
             related_id=contact_msg.id
         )
         
-        # Enviar email (si está configurado)
-        email_body = f"""Nuevo mensaje de contacto:
+        # Enviar email de confirmación al usuario
+        user_email_subject = f"Confirmación: {message.subject} - Café Demo ☕"
+        user_email_body = f"""¡Hola {message.name}!
+
+¡Gracias por contactar con Café Demo! ☕
+
+Hemos recibido tu mensaje correctamente:
+
+📋 **Detalles de tu consulta:**
+Asunto: {message.subject}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+💬 **Tu mensaje:**
+\"{message.message}\"
+
+⏰ **¿Qué sigue?**
+Nuestro equipo revisará tu mensaje y te responderemos en un máximo de 24 horas durante días laborables.
+
+Si necesitas una respuesta más inmediata, puedes:
+📞 Llamarnos al +34 123 456 789
+💬 Usar nuestro asistente IA en la web (disponible 24/7)
+
+¡Gracias por elegirnos!
+
+Con cariño,
+El equipo de Café Demo
+
+---
+ID de referencia: #{contact_msg.id}
+Email: {message.email}"""
         
+        # Enviar email de notificación al admin
+        admin_email_subject = f"Nuevo mensaje de contacto: {message.subject}"
+        admin_email_body = f"""📧 **NUEVO MENSAJE DE CONTACTO**
+
+👤 **Cliente:**
 Nombre: {message.name}
 Email: {message.email}
+
+📋 **Consulta:**
 Asunto: {message.subject}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+ID: #{contact_msg.id}
+
+💬 **Mensaje completo:**
+\"{message.message}\"
+
+---
+⚡ **Acción requerida:**
+Responder al cliente en menos de 24 horas.
+
+Puedes gestionar este mensaje desde el panel de administración.
+
+Café Demo - Sistema de Gestión"""
         
-Mensaje:
-{message.message}"""
-        
-        send_email(
+        # Enviar ambos correos
+        user_email_sent = send_email(
             to_email=message.email,
-            subject=f"Confirmación: {message.subject}",
-            body="Gracias por tu mensaje. Te responderemos pronto."
+            subject=user_email_subject,
+            body=user_email_body
         )
         
-        return {"message": "Mensaje enviado exitosamente", "id": contact_msg.id}
+        admin_email_sent = send_email(
+            to_email="jesussebastianalonsoarias@gmail.com",  # Email del admin
+            subject=admin_email_subject,
+            body=admin_email_body
+        )
+        
+        return {
+            "success": True,
+            "message": "Mensaje enviado correctamente",
+            "id": contact_msg.id,
+            "user_email_sent": user_email_sent,
+            "admin_email_sent": admin_email_sent
+        }
         
     except Exception as e:
         print(f"Error procesando contacto: {e}")
@@ -496,14 +554,69 @@ async def subscribe_newsletter(subscription: NewsletterSubscription, db: Session
             related_id=subscriber.id
         )
         
-        # Enviar email de bienvenida
-        send_email(
+        # Enviar email de bienvenida al usuario
+        user_welcome_subject = "¡Bienvenido al Newsletter de Café Demo! ☕"
+        user_welcome_body = f"""¡Hola {subscription.name or 'amigo cafetero'}!
+
+¡Te damos la bienvenida al newsletter de Café Demo! ☕
+
+Ahora recibirás:
+✅ Ofertas exclusivas y descuentos especiales
+✅ Noticias sobre nuevos productos y eventos
+✅ Tips y curiosidades del mundo del café
+✅ Invitaciones a eventos especiales
+
+¡Gracias por unirte a nuestra comunidad cafetera!
+
+Con cariño,
+El equipo de Café Demo
+
+---
+Email: {subscription.email}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+
+Si no deseas recibir más newsletters, puedes darte de baja respondiendo a este email."""
+        
+        # Enviar notificación al admin
+        admin_newsletter_subject = "Nueva suscripción al newsletter - Café Demo"
+        admin_newsletter_body = f"""📧 **NUEVA SUSCRIPCIÓN AL NEWSLETTER**
+
+👤 **Suscriptor:**
+Email: {subscription.email}
+Nombre: {subscription.name or 'No proporcionado'}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+
+📊 **Estadísticas:**
+ID de suscripción: #{subscriber.id}
+Estado: Activo
+
+---
+⚡ **Acción sugerida:**
+Puedes gestionar las suscripciones desde el panel de administración.
+
+Café Demo - Sistema de Gestión"""
+        
+        # Enviar ambos correos
+        user_email_sent = send_email(
             to_email=subscription.email,
-            subject="¡Bienvenido al Newsletter de Café Demo!",
-            body="Gracias por suscribirte. Recibirás nuestras últimas noticias y ofertas."
+            subject=user_welcome_subject,
+            body=user_welcome_body
         )
         
-        return {"message": "Suscripción exitosa", "id": subscriber.id, "subscribed": True}
+        admin_email_sent = send_email(
+            to_email="jesussebastianalonsoarias@gmail.com",  # Email del admin
+            subject=admin_newsletter_subject,
+            body=admin_newsletter_body
+        )
+        
+        return {
+            "success": True,
+            "message": "Suscripción exitosa al newsletter",
+            "id": subscriber.id,
+            "subscribed": True,
+            "user_email_sent": user_email_sent,
+            "admin_email_sent": admin_email_sent
+        }
         
     except Exception as e:
         print(f"Error en suscripción: {e}")
@@ -607,3 +720,188 @@ async def chat_with_bot(message_data: dict):
             "status": "error",
             "error": str(e)
         }
+
+# ================================
+# ENDPOINTS ADMIN FALTANTES
+# ================================
+
+@app.get("/admin/contacts", summary="[ADMIN] Obtener mensajes de contacto")
+async def get_admin_contacts(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Obtener todos los mensajes de contacto para el admin"""
+    contacts = db.query(ContactMessage).order_by(ContactMessage.created_at.desc()).all()
+    
+    return [
+        {
+            "id": contact.id,
+            "name": contact.name,
+            "email": contact.email,
+            "subject": contact.subject,
+            "message": contact.message,
+            "created_at": contact.created_at.isoformat()
+        }
+        for contact in contacts
+    ]
+
+@app.get("/admin/newsletter/subscribers", summary="[ADMIN] Obtener suscriptores del newsletter")
+async def get_admin_newsletter_subscribers(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Obtener todos los suscriptores del newsletter para el admin"""
+    subscribers = db.query(NewsletterSubscriber).filter(
+        NewsletterSubscriber.active == True
+    ).order_by(NewsletterSubscriber.created_at.desc()).all()
+    
+    return [
+        {
+            "id": sub.id,
+            "email": sub.email,
+            "name": sub.name,
+            "subscribed_at": sub.created_at.isoformat(),
+            "active": sub.active
+        }
+        for sub in subscribers
+    ]
+
+@app.get("/admin/orders/stats", summary="[ADMIN] Estadísticas de pedidos")
+async def get_orders_stats(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Obtener estadísticas de pedidos para el dashboard admin"""
+    from sqlalchemy import func
+    
+    # Contar pedidos por estado
+    orders_by_status = db.query(
+        Order.status, func.count(Order.id).label('count')
+    ).group_by(Order.status).all()
+    
+    # Total de pedidos
+    total_orders = db.query(func.count(Order.id)).scalar()
+    
+    # Ingresos totales
+    total_revenue = db.query(func.sum(Order.total_amount)).scalar() or 0
+    
+    # Pedidos de hoy
+    today = datetime.now().date()
+    today_orders = db.query(func.count(Order.id)).filter(
+        func.date(Order.created_at) == today
+    ).scalar()
+    
+    return {
+        "total_orders": total_orders,
+        "total_revenue": float(total_revenue),
+        "today_orders": today_orders,
+        "orders_by_status": [
+            {"status": status, "count": count} 
+            for status, count in orders_by_status
+        ]
+    }
+
+@app.get("/admin/reservations/stats", summary="[ADMIN] Estadísticas de reservas")
+async def get_reservations_stats(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Obtener estadísticas de reservas para el dashboard admin"""
+    from sqlalchemy import func
+    
+    # Contar reservas por estado
+    reservations_by_status = db.query(
+        Reservation.status, func.count(Reservation.id).label('count')
+    ).group_by(Reservation.status).all()
+    
+    # Total de reservas
+    total_reservations = db.query(func.count(Reservation.id)).scalar()
+    
+    # Reservas de hoy
+    today = datetime.now().date()
+    today_reservations = db.query(func.count(Reservation.id)).filter(
+        func.date(Reservation.created_at) == today
+    ).scalar()
+    
+    # Reservas para hoy (fecha de reserva)
+    reservations_for_today = db.query(func.count(Reservation.id)).filter(
+        Reservation.reservation_date == today.isoformat()
+    ).scalar()
+    
+    return {
+        "total_reservations": total_reservations,
+        "today_reservations": today_reservations,
+        "reservations_for_today": reservations_for_today,
+        "reservations_by_status": [
+            {"status": status, "count": count} 
+            for status, count in reservations_by_status
+        ]
+    }
+
+@app.put("/admin/orders/{order_id}/status", summary="[ADMIN] Actualizar estado de pedido")
+async def update_order_status(
+    order_id: int, 
+    status_data: dict, 
+    current_user: str = Depends(verify_token), 
+    db: Session = Depends(get_db)
+):
+    """Actualizar el estado de un pedido"""
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido no encontrado")
+    
+    new_status = status_data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Estado requerido")
+    
+    # Validar estados permitidos
+    allowed_statuses = ["pending", "confirmed", "preparing", "ready", "delivered", "cancelled"]
+    if new_status not in allowed_statuses:
+        raise HTTPException(status_code=400, detail="Estado no válido")
+    
+    order.status = new_status
+    db.commit()
+    
+    # Crear notificación
+    create_admin_notification(
+        db=db,
+        notification_type="order_update",
+        title=f"Pedido #{order_id} actualizado",
+        message=f"Estado cambiado a: {new_status}",
+        related_id=order_id
+    )
+    
+    return {
+        "success": True,
+        "message": f"Estado del pedido actualizado a {new_status}",
+        "order_id": order_id,
+        "new_status": new_status
+    }
+
+@app.put("/admin/reservations/{reservation_id}/status", summary="[ADMIN] Actualizar estado de reserva")
+async def update_reservation_status(
+    reservation_id: int, 
+    status_data: dict, 
+    current_user: str = Depends(verify_token), 
+    db: Session = Depends(get_db)
+):
+    """Actualizar el estado de una reserva"""
+    reservation = db.query(Reservation).filter(Reservation.id == reservation_id).first()
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada")
+    
+    new_status = status_data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Estado requerido")
+    
+    # Validar estados permitidos
+    allowed_statuses = ["pending", "confirmed", "cancelled", "completed"]
+    if new_status not in allowed_statuses:
+        raise HTTPException(status_code=400, detail="Estado no válido")
+    
+    reservation.status = new_status
+    db.commit()
+    
+    # Crear notificación
+    create_admin_notification(
+        db=db,
+        notification_type="reservation_update",
+        title=f"Reserva #{reservation_id} actualizada",
+        message=f"Estado cambiado a: {new_status}",
+        related_id=reservation_id
+    )
+    
+    return {
+        "success": True,
+        "message": f"Estado de la reserva actualizado a {new_status}",
+        "reservation_id": reservation_id,
+        "new_status": new_status
+    }
