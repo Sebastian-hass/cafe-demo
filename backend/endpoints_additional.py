@@ -7,11 +7,11 @@ from typing import List, Optional
 from datetime import datetime, date
 
 from database import (
-    get_db, Order, Reservation, NewsArticle
+    get_db, Order, Reservation, NewsArticle, JobApplication
 )
 from main_new import (
     OrderCreate, OrderResponse, ReservationCreate, ReservationResponse, 
-    NewsArticleResponse, verify_token
+    NewsArticleResponse, verify_token, JobApplicationModel
 )
 from utils import create_admin_notification, serialize_json, deserialize_json
 
@@ -256,8 +256,6 @@ def setup_additional_routes(app):
     
     @app.post("/job-applications", summary="Enviar aplicación de trabajo")
     async def submit_job_application(application_data: JobApplicationModel, db: Session = Depends(get_db)):
-        from main_new import JobApplicationModel
-        
         try:
             # Crear aplicación de trabajo
             job_app = JobApplication(
