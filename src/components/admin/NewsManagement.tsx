@@ -94,6 +94,38 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
     }
   };
 
+  // Function to send newsletter to all subscribers
+  const sendNewsletterNotification = async (articleTitle: string, articleExcerpt: string, isNew: boolean = true) => {
+    try {
+      const newsletterData = {
+        subject: `${isNew ? '🆕 Nueva Noticia' : '📰 Noticia Actualizada'} - ${articleTitle}`,
+        content: `¡Hola!
+
+${isNew ? 'Tenemos una nueva noticia' : 'Hemos actualizado una noticia'} que creemos que te interesará:
+
+📰 **${articleTitle}**
+
+${articleExcerpt}
+
+¡Visita nuestro sitio web para leer el artículo completo y descubrir más noticias interesantes!
+
+¡Gracias por ser parte de nuestra comunidad!
+
+Saludos,
+El equipo de Café Demo ☕`
+      };
+
+      await axios.post(`${API_URL}/admin/newsletter/send`, newsletterData, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      toast.success(`📧 Newsletter enviado automáticamente a todos los suscriptores`);
+    } catch (error: any) {
+      console.error('Error sending newsletter:', error);
+      toast.error('Noticia guardada, pero error al enviar newsletter');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -108,6 +140,9 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
         tags: formData.tags,
       };
 
+      let isNewArticle = !editingArticle;
+      let shouldSendNewsletter = false;
+
       if (editingArticle) {
         await axios.put(
           `${API_URL}/admin/news/${editingArticle.id}`,
@@ -115,16 +150,27 @@ const NewsManagement: React.FC<NewsManagementProps> = ({ token }) => {
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
         toast.success('Noticia actualizada correctamente');
+        
+        // Send newsletter if the article was unpublished and now is published
+        shouldSendNewsletter = !editingArticle.published && formData.published;
       } else {
         await axios.post(`${API_URL}/admin/news`, articleData, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         toast.success('Noticia creada correctamente');
+        
+        // Send newsletter for new published articles
+        shouldSendNewsletter = formData.published;
       }
 
       fetchArticles();
       resetForm();
       setShowModal(false);
+
+      // Send newsletter notification if needed
+      if (shouldSendNewsletter) {
+        await sendNewsletterNotification(formData.title, formData.excerpt, isNewArticle);
+      }
     } catch (error: any) {
       console.error('Error saving article:', error);
       toast.error('Error al guardar la noticia');

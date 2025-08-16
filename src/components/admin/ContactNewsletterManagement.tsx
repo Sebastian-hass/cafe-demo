@@ -59,6 +59,11 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
   const [loading, setLoading] = useState(true);
   const [selectedContact, setSelectedContact] = useState<ContactMessage | null>(null);
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [replyData, setReplyData] = useState({
+    subject: '',
+    message: ''
+  });
   const [newsletterData, setNewsletterData] = useState({
     subject: '',
     content: ''
@@ -115,6 +120,40 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
       console.error('Error sending newsletter:', error);
       toast.error(error.response?.data?.detail || 'Error enviando newsletter');
     }
+  };
+
+  const sendReply = async () => {
+    if (!selectedContact || !replyData.subject.trim() || !replyData.message.trim()) {
+      toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/admin/reply`, {
+        to_email: selectedContact.email,
+        to_name: selectedContact.name,
+        subject: replyData.subject,
+        message: replyData.message,
+        original_message: selectedContact.message
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      toast.success('Respuesta enviada exitosamente');
+      setShowReplyModal(false);
+      setReplyData({ subject: '', message: '' });
+    } catch (error: any) {
+      console.error('Error sending reply:', error);
+      toast.error(error.response?.data?.detail || 'Error enviando respuesta');
+    }
+  };
+
+  const openReplyModal = (contact: ContactMessage) => {
+    setReplyData({
+      subject: `Re: ${contact.subject}`,
+      message: `Hola ${contact.name},\n\nGracias por contactarnos. `
+    });
+    setShowReplyModal(true);
   };
 
   const deleteContact = async (contactId: number) => {
@@ -431,9 +470,7 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
 
                 <div className="flex space-x-3 pt-4">
                   <button
-                    onClick={() => {
-                      window.location.href = `mailto:${selectedContact.email}?subject=Re: ${selectedContact.subject}`;
-                    }}
+                    onClick={() => openReplyModal(selectedContact)}
                     className="flex-1 bg-coffee-600 hover:bg-coffee-700 text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
                   >
                     <FaEnvelope />
@@ -540,6 +577,97 @@ const ContactNewsletterManagement: React.FC<ContactNewsletterManagementProps> = 
                   >
                     <FaPaperPlane />
                     <span>Enviar Newsletter</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reply Modal */}
+      <AnimatePresence>
+        {showReplyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-xl max-w-lg w-full p-6"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-coffee-800">Enviar Respuesta</h3>
+                <button
+                  onClick={() => setShowReplyModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                sendReply();
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-coffee-700 mb-1">
+                    Asunto
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={replyData.subject}
+                    onChange={(e) => setReplyData({...replyData, subject: e.target.value})}
+                    className="w-full px-3 py-2 border border-coffee-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-coffee-500"
+                    placeholder="Asunto de la respuesta"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-coffee-700 mb-1">
+                    Mensaje
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={replyData.message}
+                    onChange={(e) => setReplyData({...replyData, message: e.target.value})}
+                    className="w-full px-3 py-2 border border-coffee-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-coffee-500"
+                    placeholder="Escribe tu respuesta aquí..."
+                  />
+                </div>
+
+                {selectedContact && (
+                  <div className="bg-coffee-50 border border-coffee-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FaEnvelope className="text-coffee-600" />
+                      <span className="font-semibold text-coffee-800">Destinatario</span>
+                    </div>
+                    <p className="text-sm text-coffee-700">
+                      {selectedContact.name} ({selectedContact.email})
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowReplyModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-coffee-600 hover:bg-coffee-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <FaPaperPlane />
+                    <span>Enviar Respuesta</span>
                   </button>
                 </div>
               </form>

@@ -30,12 +30,22 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({ className = "" }) => {
         name: name || undefined
       });
       
-      if (response.data.success) {
-        if (response.data.already_subscribed) {
-          toast.success('¡Ya estás suscrito a nuestro newsletter!');
+      if (response.data.success || response.data.subscribed) {
+        // Verificar si ya estaba suscrito o es nueva suscripción
+        if (response.data.message && response.data.message.includes('Ya estás suscrito')) {
+          toast.success('¡Ya estás suscrito a nuestro newsletter! 🎆');
+        } else if (response.data.message && response.data.message.includes('reactivada')) {
+          toast.success('¡Suscripción reactivada exitosamente! 🚀');
         } else {
-          toast.success('¡Suscripción exitosa! Te mantendremos informado.');
+          toast.success('¡🎉 Suscripción exitosa! Revisa tu email para la confirmación.');
         }
+        
+        // Limpiar formulario
+        setEmail('');
+        setName('');
+      } else {
+        // Fallback por si la respuesta no tiene el formato esperado
+        toast.success('¡Suscripción procesada! Revisa tu email.');
         setEmail('');
         setName('');
       }

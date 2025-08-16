@@ -9,7 +9,8 @@ import {
   FaEnvelope,
   FaPhone,
   FaTrash,
-  FaFileAlt
+  FaFileAlt,
+  FaPaperPlane
 } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -35,6 +36,11 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<JobApplication | null>(null);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [replyData, setReplyData] = useState({
+    subject: '',
+    message: ''
+  });
 
   useEffect(() => {
     fetchJobApplications();
@@ -53,6 +59,40 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
     } finally {
       setLoading(false);
     }
+  };
+
+  const sendReply = async () => {
+    if (!selectedApplication || !replyData.subject.trim() || !replyData.message.trim()) {
+      toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API_URL}/admin/reply`, {
+        to_email: selectedApplication.email,
+        to_name: selectedApplication.name,
+        subject: replyData.subject,
+        message: replyData.message,
+        original_message: `Aplicación para ${selectedApplication.position}`
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      toast.success('Respuesta enviada exitosamente');
+      setShowReplyModal(false);
+      setReplyData({ subject: '', message: '' });
+    } catch (error: any) {
+      console.error('Error sending reply:', error);
+      toast.error(error.response?.data?.detail || 'Error enviando respuesta');
+    }
+  };
+
+  const openReplyModal = (application: JobApplication) => {
+    setReplyData({
+      subject: `Re: Aplicación para ${application.position} - Café Demo`,
+      message: `Hola ${application.name},\n\nGracias por tu interés en formar parte del equipo de Café Demo. `
+    });
+    setShowReplyModal(true);
   };
 
   const deleteApplication = async (applicationId: number) => {
@@ -307,11 +347,7 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
                 {/* Action Buttons */}
                 <div className="flex space-x-3 pt-4 border-t">
                   <button
-                    onClick={() => {
-                      const subject = encodeURIComponent(`Re: Aplicación para ${selectedApplication.position} - Café Demo`);
-                      const body = encodeURIComponent(`Hola ${selectedApplication.name},\n\nGracias por tu interés en formar parte del equipo de Café Demo.\n\n`);
-                      window.location.href = `mailto:${selectedApplication.email}?subject=${subject}&body=${body}`;
-                    }}
+                    onClick={() => openReplyModal(selectedApplication)}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 transition-colors"
                   >
                     <FaEnvelope />
@@ -332,6 +368,100 @@ const JobApplicationsManagement: React.FC<JobApplicationsManagementProps> = ({ t
                   </button>
                 </div>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reply Modal */}
+      <AnimatePresence>
+        {showReplyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-xl max-w-lg w-full p-6"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-coffee-800">Contactar Candidato</h3>
+                <button
+                  onClick={() => setShowReplyModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                sendReply();
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-coffee-700 mb-1">
+                    Asunto
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={replyData.subject}
+                    onChange={(e) => setReplyData({...replyData, subject: e.target.value})}
+                    className="w-full px-3 py-2 border border-coffee-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-coffee-500"
+                    placeholder="Asunto del mensaje"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-coffee-700 mb-1">
+                    Mensaje
+                  </label>
+                  <textarea
+                    required
+                    rows={6}
+                    value={replyData.message}
+                    onChange={(e) => setReplyData({...replyData, message: e.target.value})}
+                    className="w-full px-3 py-2 border border-coffee-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-coffee-500"
+                    placeholder="Escribe tu mensaje para el candidato aquí..."
+                  />
+                </div>
+
+                {selectedApplication && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <FaEnvelope className="text-blue-600" />
+                      <span className="font-semibold text-blue-800">Candidato</span>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      {selectedApplication.name} ({selectedApplication.email})
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Aplicación para: {selectedApplication.position}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowReplyModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <FaPaperPlane />
+                    <span>Enviar Mensaje</span>
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}

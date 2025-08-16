@@ -76,12 +76,62 @@ const SpecialsManagement: React.FC<SpecialsManagementProps> = ({ token }) => {
     }
   };
 
+  // Function to send newsletter notification for new specials
+  const sendSpecialNewsletterNotification = async (productName: string, productDescription: string, discount: number, date: string) => {
+    try {
+      const newsletterData = {
+        subject: `🎉 ¡Nueva Oferta Especial! ${discount}% de descuento en ${productName}`,
+        content: `¡Hola!
+
+Tenemos una oferta especial que no puedes perderte:
+
+🎆 **ESPECIAL DEL DÍA**
+📏 **Producto:** ${productName}
+💰 **Descuento:** ${discount}% OFF
+📅 **Fecha:** ${new Date(date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
+📋 **Descripción:**
+${productDescription}
+
+¡Visita nuestro café y aprovecha esta increíble oferta antes de que termine!
+
+¡Te esperamos!
+
+Saludos,
+El equipo de Café Demo ☕`
+      };
+
+      await axios.post(`${API_URL}/admin/newsletter/send`, newsletterData, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      toast.success(`📧 Newsletter de oferta especial enviado automáticamente`);
+    } catch (error: any) {
+      console.error('Error sending special newsletter:', error);
+      toast.error('Especial creado, pero error al enviar newsletter');
+    }
+  };
+
   const handleCreateSpecial = async () => {
     try {
       const response = await axios.post(`${API_URL}/admin/specials`, formData, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      const createdSpecial = response.data;
       toast.success('¡Especial creado exitosamente!');
+      
+      // Find the selected product to get its details for the newsletter
+      const selectedProduct = products.find(p => p.id.toString() === formData.product_id);
+      if (selectedProduct) {
+        await sendSpecialNewsletterNotification(
+          selectedProduct.name,
+          selectedProduct.description,
+          formData.discount,
+          formData.date
+        );
+      }
+      
       handleCloseModal();
       fetchSpecials(); // Refresh the list
     } catch (error: any) {
