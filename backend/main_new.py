@@ -278,6 +278,13 @@ class NotificationResponse(BaseModel):
     is_read: bool
     created_at: str
 
+# Modelo para respuesta del admin
+class AdminReplyModel(BaseModel):
+    recipient_email: str
+    subject: str
+    message: str
+    reference_id: Optional[int] = None
+
 # ================================
 # CONFIGURACIÓN DE LA APP
 # ================================
@@ -747,14 +754,14 @@ async def get_admin_newsletter_subscribers(current_user: str = Depends(verify_to
     """Obtener todos los suscriptores del newsletter para el admin"""
     subscribers = db.query(NewsletterSubscriber).filter(
         NewsletterSubscriber.active == True
-    ).order_by(NewsletterSubscriber.created_at.desc()).all()
+    ).order_by(NewsletterSubscriber.subscribed_at.desc()).all()
     
     return [
         {
             "id": sub.id,
             "email": sub.email,
             "name": sub.name,
-            "subscribed_at": sub.created_at.isoformat(),
+            "subscribed_at": sub.subscribed_at.isoformat(),
             "active": sub.active
         }
         for sub in subscribers
@@ -905,3 +912,286 @@ async def update_reservation_status(
         "reservation_id": reservation_id,
         "new_status": new_status
     }
+
+# ================================
+# ENDPOINT APLICACIONES DE TRABAJO
+# ================================
+
+@app.post("/jobs/apply", summary="Enviar aplicación de trabajo")
+async def submit_job_application(application: JobApplicationModel, db: Session = Depends(get_db)):
+    """Endpoint para enviar aplicaciones de trabajo"""
+    try:
+        # Crear aplicación de trabajo
+        job_app = JobApplication(
+            name=application.name,
+            email=application.email,
+            phone=application.phone,
+            position=application.position,
+            experience=application.experience,
+            motivation=application.motivation,
+            cv_filename=application.cv_filename
+        )
+        
+        db.add(job_app)
+        db.commit()
+        db.refresh(job_app)
+        
+        # Crear notificación para el admin
+        create_admin_notification(
+            db=db,
+            notification_type="job_application",
+            title=f"Nueva solicitud: {application.position}",
+            message=f"{application.name} se postuló para {application.position}",
+            related_id=job_app.id
+        )
+        
+        # Email al aplicante
+        applicant_email_subject = f"Confirmación de aplicación - {application.position} - Café Demo ☕"
+        applicant_email_body = f"""¡Hola {application.name}!
+
+Gracias por tu interés en unirte a nuestro equipo como {application.position}.
+
+Hemos recibido tu aplicación correctamente:
+
+💼 **Detalles de tu aplicación:**
+Posición: {application.position}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}
+ID: #{job_app.id}
+
+⏰ **¿Qué sigue?**
+Nuestro equipo de recursos humanos revisará tu aplicación y nos pondremos en contacto contigo en los próximos días si tu perfil se ajusta a lo que estamos buscando.
+
+📋 **Tu experiencia nos interesa:**
+\"{application.experience[:200]}{'...' if len(application.experience) > 200 else ''}\"
+
+¡Gracias por considerar trabajar con nosotros!
+
+Saludos,
+Equipo de Recursos Humanos - Café Demo
+
+---
+ID de aplicación: #{job_app.id}
+Email: {application.email}"""
+        
+        # Email al admin
+        admin_job_subject = f"Nueva aplicación de trabajo: {application.position}"
+        admin_job_body = f"""💼 **NUEVA APLICACIÓN DE TRABAJO**
+
+👤 **Candidato:**
+Nombre: {application.name}
+Email: {application.email}
+Teléfono: {application.phone}
+
+💼 **Posición:**
+{application.position}
+
+📊 **Experiencia:**
+{application.experience}
+
+💖 **Motivación:**
+{application.motivation}
+
+---
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+ID: #{job_app.id}
+
+⚡ **Acción requerida:**
+Revisar la aplicación desde el panel de administración.
+
+Café Demo - Sistema de Gestión"""
+        
+        # Enviar correos
+        user_email_sent = send_email(
+            to_email=application.email,
+            subject=applicant_email_subject,
+            body=applicant_email_body
+        )
+        
+        admin_email_sent = send_email(
+            to_email="jesussebastianalonsoarias@gmail.com",
+            subject=admin_job_subject,
+            body=admin_job_body
+        )
+        
+        return {
+            "success": True,
+            "message": "Aplicación enviada exitosamente",
+            "id": job_app.id,
+            "user_email_sent": user_email_sent,
+            "admin_email_sent": admin_email_sent
+        }
+        
+    except Exception as e:
+        print(f"Error procesando aplicación de trabajo: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+# ================================
+# ENDPOINTS DELETE PARA ADMIN
+# ================================
+
+@app.delete("/admin/contacts/{contact_id}", summary="[ADMIN] Eliminar mensaje de contacto")
+async def delete_contact_message(contact_id: int, current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Eliminar un mensaje de contacto"""
+    contact = db.query(ContactMessage).filter(ContactMessage.id == contact_id).first()
+    if not contact:
+        raise HTTPException(status_code=404, detail="Mensaje no encontrado")
+    
+    db.delete(contact)
+    db.commit()
+    
+    return {"success": True, "message": "Mensaje eliminado exitosamente"}
+
+@app.delete("/admin/newsletter/subscribers/{subscriber_id}", summary="[ADMIN] Eliminar suscriptor del newsletter")
+async def delete_newsletter_subscriber(subscriber_id: int, current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Eliminar un suscriptor del newsletter"""
+    subscriber = db.query(NewsletterSubscriber).filter(NewsletterSubscriber.id == subscriber_id).first()
+    if not subscriber:
+        raise HTTPException(status_code=404, detail="Suscriptor no encontrado")
+    
+    db.delete(subscriber)
+    db.commit()
+    
+    return {"success": True, "message": "Suscriptor eliminado exitosamente"}
+
+@app.delete("/admin/job-applications/{application_id}", summary="[ADMIN] Eliminar aplicación de trabajo")
+async def delete_job_application(application_id: int, current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Eliminar una aplicación de trabajo"""
+    application = db.query(JobApplication).filter(JobApplication.id == application_id).first()
+    if not application:
+        raise HTTPException(status_code=404, detail="Aplicación no encontrada")
+    
+    db.delete(application)
+    db.commit()
+    
+    return {"success": True, "message": "Aplicación eliminada exitosamente"}
+
+# ================================
+# SISTEMA DE RESPUESTAS ADMIN
+# ================================
+
+@app.post("/admin/reply", summary="[ADMIN] Enviar respuesta por email")
+async def admin_send_reply(reply: AdminReplyModel, current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+    """Endpoint para que el admin envíe respuestas por email"""
+    try:
+        # Plantilla profesional para respuesta del admin
+        admin_reply_subject = f"Re: {reply.subject} - Café Demo ☕"
+        admin_reply_body = f"""¡Hola!
+
+Gracias por contactar con Café Demo. Hemos revisado tu mensaje y queremos responderte personalmente:
+
+{reply.message}
+
+---
+
+Si tienes más preguntas, no dudes en contactarnos:
+📞 Teléfono: +34 123 456 789
+✉️ Email: info@cafedemo.com
+💬 Chat IA: Disponible 24/7 en nuestra web
+
+¡Esperamos verte pronto en nuestro café!
+
+Saludos cordiales,
+El equipo de Café Demo
+
+---
+Este mensaje fue enviado desde el panel de administración.
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"""
+        
+        # Enviar email
+        email_sent = send_email(
+            to_email=reply.recipient_email,
+            subject=admin_reply_subject,
+            body=admin_reply_body
+        )
+        
+        # Crear notificación de seguimiento
+        create_admin_notification(
+            db=db,
+            notification_type="admin_reply",
+            title=f"Respuesta enviada a {reply.recipient_email}",
+            message=f"Asunto: {reply.subject}",
+            related_id=reply.reference_id
+        )
+        
+        return {
+            "success": True,
+            "message": "Respuesta enviada exitosamente",
+            "email_sent": email_sent,
+            "recipient": reply.recipient_email
+        }
+        
+    except Exception as e:
+        print(f"Error enviando respuesta del admin: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+# ================================
+# FUNCIÓN AUXILIAR NEWSLETTER
+# ================================
+
+async def send_newsletter_to_subscribers(subject: str, content: str, db: Session):
+    """
+    Función para enviar newsletter a todos los suscriptores activos
+    """
+    try:
+        # Obtener todos los suscriptores activos
+        subscribers = db.query(NewsletterSubscriber).filter(
+            NewsletterSubscriber.active == True
+        ).all()
+        
+        if not subscribers:
+            return {"sent": 0, "message": "No hay suscriptores activos"}
+        
+        sent_count = 0
+        failed_count = 0
+        
+        for subscriber in subscribers:
+            try:
+                # Plantilla personalizada para cada suscriptor
+                newsletter_body = f"""¡Hola {subscriber.name or 'amigo cafetero'}!
+
+¡Tenemos noticias emocionantes desde Café Demo! ☕
+
+{content}
+
+¡No te lo pierdas! Ven a visitarnos y disfruta de la experiencia completa.
+
+📍 **¿Dónde encontrarnos?**
+Calle Principal 123, Madrid
+📞 Teléfono: +34 123 456 789
+⏰ Horarios: Lunes a Domingo, 7:00 - 22:00
+
+¡Gracias por ser parte de nuestra comunidad cafetera!
+
+Con cariño,
+El equipo de Café Demo
+
+---
+Email: {subscriber.email}
+Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+
+Si no deseas recibir más newsletters, puedes darte de baja respondiendo a este email."""
+                
+                success = send_email(
+                    to_email=subscriber.email,
+                    subject=subject,
+                    body=newsletter_body
+                )
+                
+                if success:
+                    sent_count += 1
+                else:
+                    failed_count += 1
+                    
+            except Exception as e:
+                print(f"Error enviando newsletter a {subscriber.email}: {e}")
+                failed_count += 1
+        
+        return {
+            "sent": sent_count,
+            "failed": failed_count,
+            "total_subscribers": len(subscribers)
+        }
+        
+    except Exception as e:
+        print(f"Error en envío masivo de newsletter: {e}")
+        return {"sent": 0, "failed": 0, "error": str(e)}
