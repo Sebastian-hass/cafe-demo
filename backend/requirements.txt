@@ -15,3 +15,7 @@ alembic==1.14.0
 
 # OpenAI
 openai
+
+# Para imágenes placeholder
+Pillow==10.4.0
+requests==2.32.3

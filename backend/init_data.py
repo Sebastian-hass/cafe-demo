@@ -12,7 +12,12 @@ def init_sample_data():
         from create_placeholder_images import create_product_placeholders
         create_product_placeholders()
     except Exception as e:
-        print(f"⚠️ Error creando imágenes placeholder: {e}")
+        print(f"⚠️ Error con PIL: {e}")
+        try:
+            from create_placeholder_simple import create_product_placeholders_simple
+            create_product_placeholders_simple()
+        except Exception as e2:
+            print(f"⚠️ Error creando placeholders simples: {e2}")
     
     db = SessionLocal()
     
