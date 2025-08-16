@@ -595,7 +595,7 @@ async def chat_with_bot(message_data: dict):
         response = chatbot.get_chat_response(user_message)
         
         return {
-            "response": response,
+            "message": response,
             "status": "success",
             "timestamp": datetime.now().isoformat()
         }
@@ -603,7 +603,7 @@ async def chat_with_bot(message_data: dict):
     except Exception as e:
         print(f"Error en chat: {e}")
         return {
-            "response": "Lo siento, estoy experimentando dificultades técnicas. Por favor, intenta más tarde.",
+            "message": "Lo siento, estoy experimentando dificultades técnicas. Por favor, intenta más tarde.",
             "status": "error",
             "error": str(e)
         }
