@@ -7,6 +7,13 @@ import json
 
 def init_sample_data():
     """Inicializar la base de datos con datos de muestra"""
+    # Crear imágenes placeholder si no existen
+    try:
+        from create_placeholder_images import create_product_placeholders
+        create_product_placeholders()
+    except Exception as e:
+        print(f"⚠️ Error creando imágenes placeholder: {e}")
+    
     db = SessionLocal()
     
     try:
