@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from database import get_db, AdminNotification, ProductCategory
-from main_new import NotificationResponse, CategoryResponse, verify_token, DashboardStats
+from main_new import (
+    NotificationResponse, CategoryResponse, verify_token, DashboardStats, AdminLogin,
+    ADMIN_USERNAME, ADMIN_PASSWORD_HASH, hash_password, create_access_token
+)
 from utils import get_unread_notifications_count
 
 # ================================
@@ -180,8 +183,6 @@ def setup_notifications_routes(app):
     
     @app.post("/admin/login", summary="Login de administrador")
     async def admin_login(credentials: AdminLogin):
-        from main_new import AdminLogin, ADMIN_USERNAME, ADMIN_PASSWORD_HASH, hash_password, create_access_token
-        
         # Verificar credenciales usando variables de entorno
         if (credentials.username == ADMIN_USERNAME and 
             hash_password(credentials.password) == ADMIN_PASSWORD_HASH):
