@@ -225,6 +225,10 @@ def process_whatsapp_message(user_message: str) -> str:
     # Si OpenAI falla o no está disponible, usar respuestas predefinidas
     return generate_fallback_response(user_message)
 
+def get_chat_response(user_message: str) -> str:
+    """Función principal para obtener respuesta del chat (alias de process_whatsapp_message)"""
+    return process_whatsapp_message(user_message)
+
 # Función de utilidad para validar configuración
 def validate_config() -> dict:
     """Validar que la configuración esté completa"""

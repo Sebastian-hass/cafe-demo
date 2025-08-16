@@ -140,6 +140,21 @@ def setup_notifications_routes(app):
             }
             for cat in categories
         ]
+    
+    @app.get("/admin/categories", summary="[ADMIN] Obtener todas las categorías")
+    async def get_admin_categories(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+        categories = db.query(ProductCategory).order_by(ProductCategory.name).all()
+        
+        return [
+            {
+                "id": cat.id,
+                "name": cat.name,
+                "description": cat.description or "",
+                "icon": cat.icon,
+                "created_at": cat.created_at.isoformat() if cat.created_at else ""
+            }
+            for cat in categories
+        ]
 
     # ================================
     # DASHBOARD ADMIN

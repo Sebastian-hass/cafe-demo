@@ -401,10 +401,12 @@ async def health_check():
 
 from endpoints_products import setup_products_routes
 from endpoints_notifications import setup_notifications_routes
+from endpoints_additional import setup_additional_routes
 
 # Configurar rutas
 setup_products_routes(app)
 setup_notifications_routes(app)
+setup_additional_routes(app)
 
 # ================================
 # ENDPOINTS ADICIONALES
