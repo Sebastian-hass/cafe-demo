@@ -8,7 +8,8 @@ from typing import List
 from database import get_db, AdminNotification, ProductCategory
 from main_new import (
     NotificationResponse, CategoryResponse, verify_token, DashboardStats, AdminLogin,
-    ADMIN_USERNAME, ADMIN_PASSWORD_HASH, hash_password, create_access_token
+    ADMIN_USERNAME, ADMIN_PASSWORD_HASH, hash_password, create_access_token,
+    CategoryCreate, CategoryUpdate
 )
 from utils import get_unread_notifications_count
 
@@ -162,8 +163,6 @@ def setup_notifications_routes(app):
         current_user: str = Depends(verify_token),
         db: Session = Depends(get_db)
     ):
-        from main_new import CategoryCreate
-        
         # Verificar que no exista ya
         existing = db.query(ProductCategory).filter(ProductCategory.id == category_data.id).first()
         if existing:
@@ -195,7 +194,6 @@ def setup_notifications_routes(app):
         current_user: str = Depends(verify_token),
         db: Session = Depends(get_db)
     ):
-        from main_new import CategoryUpdate
         
         category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
         if not category:
