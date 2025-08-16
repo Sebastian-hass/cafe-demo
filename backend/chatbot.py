@@ -35,30 +35,26 @@ if OPENAI_API_KEY:
     print(f"🔑 API Key (primeros 20 chars): {OPENAI_API_KEY[:20]}...")
 
 def get_menu_context() -> str:
-    """Obtener contexto del menú desde la base de datos"""
+    """Obtener contexto del menú desde la base de datos usando SQLAlchemy"""
     try:
-        conn = sqlite3.connect('cafe.db')
-        cursor = conn.cursor()
+        from database import SessionLocal, Product, Special
+        from datetime import date
+        
+        db = SessionLocal()
         
         # Obtener productos disponibles
-        cursor.execute("""
-            SELECT name, description, price, category 
-            FROM products 
-            WHERE available = 1 
-            ORDER BY category, name
-        """)
-        products = cursor.fetchall()
+        products = db.query(Product).filter(
+            Product.available == True
+        ).order_by(Product.category, Product.name).all()
         
         # Obtener especiales del día
-        cursor.execute("""
-            SELECT p.name, p.description, p.price, s.discount
-            FROM products p 
-            JOIN specials s ON p.id = s.product_id 
-            WHERE s.date = date('now') AND p.available = 1
-        """)
-        specials = cursor.fetchall()
+        today = date.today().isoformat()
+        specials = db.query(Special).join(Product).filter(
+            Special.date == today,
+            Product.available == True
+        ).all()
         
-        conn.close()
+        db.close()
         
         # Formatear información del menú
         menu_text = f"🍽️ MENÚ {APP_NAME}:\n\n"
@@ -66,10 +62,10 @@ def get_menu_context() -> str:
         # Agrupar por categorías
         categories = {}
         for product in products:
-            name, desc, price, category = product
+            name, desc, price, category = product.name, product.description, product.price, product.category
             if category not in categories:
                 categories[category] = []
-            categories[category].append(f"• {name}: {desc} - €{price:.2f}")
+            categories[category].append(f"• {name}: {desc or 'Sin descripción'} - €{price:.2f}")
         
         for category, items in categories.items():
             menu_text += f"📂 {category.upper()}:\n"
@@ -79,9 +75,9 @@ def get_menu_context() -> str:
         if specials:
             menu_text += "🎉 ESPECIALES DEL DÍA:\n"
             for special in specials:
-                name, desc, original_price, discount = special
-                discounted_price = original_price * (1 - discount / 100)
-                menu_text += f"• {name}: {desc} - €{discounted_price:.2f} (antes €{original_price:.2f}, -{discount}% descuento)\n"
+                product = special.product
+                discounted_price = product.price * (1 - special.discount / 100)
+                menu_text += f"• {product.name}: {product.description or 'Sin descripción'} - €{discounted_price:.2f} (antes €{product.price:.2f}, -{special.discount}% descuento)\n"
             menu_text += "\n"
         
         return menu_text

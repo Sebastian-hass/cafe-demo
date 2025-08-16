@@ -249,3 +249,100 @@ def setup_additional_routes(app):
             }
             for article in articles
         ]
+    
+    # ================================
+    # ENDPOINTS DE APLICACIONES DE TRABAJO
+    # ================================
+    
+    @app.post("/job-applications", summary="Enviar aplicación de trabajo")
+    async def submit_job_application(application_data: JobApplicationModel, db: Session = Depends(get_db)):
+        from main_new import JobApplicationModel
+        
+        try:
+            # Crear aplicación de trabajo
+            job_app = JobApplication(
+                name=application_data.name,
+                email=application_data.email,
+                phone=application_data.phone,
+                position=application_data.position,
+                experience=application_data.experience,
+                motivation=application_data.motivation,
+                cv_filename=application_data.cv_filename
+            )
+            
+            db.add(job_app)
+            db.commit()
+            db.refresh(job_app)
+            
+            # Crear notificación para el admin
+            create_admin_notification(
+                db=db,
+                notification_type="job_application",
+                title=f"Nueva solicitud: {application_data.position}",
+                message=f"{application_data.name} se postuló para {application_data.position}",
+                related_id=job_app.id
+            )
+            
+            # Enviar emails
+            from utils import send_email
+            
+            # Email al admin
+            admin_email_body = f"""Nueva aplicación de trabajo recibida:
+            
+Nombre: {application_data.name}
+Email: {application_data.email}
+Teléfono: {application_data.phone}
+Posición: {application_data.position}
+            
+Experiencia:
+{application_data.experience}
+            
+Motivación:
+{application_data.motivation}"""
+            
+            # Email de confirmación al aplicante
+            applicant_email_body = f"""Hola {application_data.name},
+            
+Gracias por tu interés en unirte a nuestro equipo como {application_data.position}.
+            
+Hemos recibido tu aplicación y la revisaremos en los próximos días. Nos pondremos en contacto contigo si tu perfil se ajusta a lo que estamos buscando.
+            
+¡Gracias por considerar trabajar con nosotros!
+            
+Saludos,
+Equipo de Café Demo"""
+            
+            send_email(
+                to_email=application_data.email,
+                subject=f"Confirmación de aplicación - {application_data.position}",
+                body=applicant_email_body
+            )
+            
+            return {
+                "message": "Aplicación enviada exitosamente", 
+                "id": job_app.id,
+                "status": "received"
+            }
+            
+        except Exception as e:
+            print(f"Error procesando aplicación de trabajo: {e}")
+            raise HTTPException(status_code=500, detail="Error interno del servidor")
+    
+    @app.get("/admin/job-applications", summary="[ADMIN] Obtener todas las aplicaciones")
+    async def get_job_applications(current_user: str = Depends(verify_token), db: Session = Depends(get_db)):
+        applications = db.query(JobApplication).order_by(JobApplication.created_at.desc()).all()
+        
+        return [
+            {
+                "id": app.id,
+                "name": app.name,
+                "email": app.email,
+                "phone": app.phone,
+                "position": app.position,
+                "experience": app.experience,
+                "motivation": app.motivation,
+                "cv_filename": app.cv_filename,
+                "created_at": app.created_at.isoformat()
+            }
+            for app in applications
+        ]

@@ -155,6 +155,93 @@ def setup_notifications_routes(app):
             }
             for cat in categories
         ]
+    
+    @app.post("/admin/categories", summary="[ADMIN] Crear nueva categoría")
+    async def create_category(
+        category_data: CategoryCreate, 
+        current_user: str = Depends(verify_token),
+        db: Session = Depends(get_db)
+    ):
+        from main_new import CategoryCreate
+        
+        # Verificar que no exista ya
+        existing = db.query(ProductCategory).filter(ProductCategory.id == category_data.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="La categoría ya existe")
+        
+        category = ProductCategory(
+            id=category_data.id,
+            name=category_data.name,
+            description=category_data.description,
+            icon=category_data.icon
+        )
+        
+        db.add(category)
+        db.commit()
+        db.refresh(category)
+        
+        return {
+            "id": category.id,
+            "name": category.name,
+            "description": category.description or "",
+            "icon": category.icon,
+            "created_at": category.created_at.isoformat()
+        }
+    
+    @app.put("/admin/categories/{category_id}", summary="[ADMIN] Actualizar categoría")
+    async def update_category(
+        category_id: str,
+        category_update: CategoryUpdate,
+        current_user: str = Depends(verify_token),
+        db: Session = Depends(get_db)
+    ):
+        from main_new import CategoryUpdate
+        
+        category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
+        if not category:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+        
+        if category_update.name is not None:
+            category.name = category_update.name
+        if category_update.description is not None:
+            category.description = category_update.description
+        if category_update.icon is not None:
+            category.icon = category_update.icon
+        
+        db.commit()
+        db.refresh(category)
+        
+        return {
+            "id": category.id,
+            "name": category.name,
+            "description": category.description or "",
+            "icon": category.icon,
+            "created_at": category.created_at.isoformat()
+        }
+    
+    @app.delete("/admin/categories/{category_id}", summary="[ADMIN] Eliminar categoría")
+    async def delete_category(
+        category_id: str,
+        current_user: str = Depends(verify_token),
+        db: Session = Depends(get_db)
+    ):
+        category = db.query(ProductCategory).filter(ProductCategory.id == category_id).first()
+        if not category:
+            raise HTTPException(status_code=404, detail="Categoría no encontrada")
+        
+        # Verificar si hay productos usando esta categoría
+        from database import Product
+        products_count = db.query(Product).filter(Product.category == category_id).count()
+        if products_count > 0:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"No se puede eliminar. Hay {products_count} producto(s) usando esta categoría"
+            )
+        
+        db.delete(category)
+        db.commit()
+        
+        return {"message": "Categoría eliminada exitosamente"}
 
     # ================================
     # DASHBOARD ADMIN
