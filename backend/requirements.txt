@@ -8,4 +8,10 @@ passlib[bcrypt]==1.7.4
 python-decouple==3.8
 aiofiles==24.1.0
 
+# Base de datos
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# OpenAI
 openai
